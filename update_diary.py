@@ -34,37 +34,31 @@ def append_cells(text, name, entries):
     raise RuntimeError('Array end not found')
 
 
-# 31.08.2026 — Training B.
-if '"31.08"' not in s:
-    s = s.replace('<span class="stat-val">58</span><span class="stat-lbl">Тренировок</span>', '<span class="stat-val">59</span><span class="stat-lbl">Тренировок</span>', 1)
-    s = s.replace('"24.08","26.08","28.08"]', '"24.08","26.08","28.08","31.08"]', 1)
-    s = s.replace('new Set([29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57])', 'new Set([29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58])', 1)
+# 02.09.2026 — Training A.
+if '"02.09"' not in s:
+    s = s.replace('<span class="tag tag-green">Март — Август 2026</span>', '<span class="tag tag-green">Март — Сентябрь 2026</span>', 1)
+    s = s.replace('<span class="stat-val">59</span><span class="stat-lbl">Тренировок</span>', '<span class="stat-val">60</span><span class="stat-lbl">Тренировок</span>', 1)
+    s = s.replace('<option value="08">Август</option>', '<option value="08">Август</option><option value="09">Сентябрь</option>', 1)
+    s = s.replace('"28.08","31.08"]', '"28.08","31.08","02.09"]', 1)
+    s = s.replace('new Set([29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58])', 'new Set([29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59])', 1)
 
-    s = append_cells(s, 'Жим гантелей\\n(30°)', ['null'])
-    s = append_cells(s, 'Жим гантелей\\nсидя (Плечи)', ['{w:"20кг",r:[12,12,12]}'])
-    s = append_cells(s, 'Тяга верхнего\\nблока', ['null'])
-    s = append_cells(s, 'Тяга нижнего\\nблока (к поясу)', ['{w:"72.7кг",r:[10,10,10]}'])
-    s = append_cells(s, 'Тяга гантели\\nк поясу', ['{w:"22.5кг",r:[12,12,10]}'])
-    s = append_cells(s, 'Отжимания\\nна брусьях', ['null'])
-    s = append_cells(s, 'Махи гантелями\\nв стороны', ['null'])
+    s = append_cells(s, 'Жим гантелей\\n(30°)', ['{w:"30кг",r:[12,12,12]}'])
+    s = append_cells(s, 'Жим гантелей\\nсидя (Плечи)', ['null'])
+    s = append_cells(s, 'Тяга верхнего\\nблока', ['{w:"68.2кг",r:[12,11,11]}'])
+    s = append_cells(s, 'Тяга нижнего\\nблока (к поясу)', ['null'])
+    s = append_cells(s, 'Тяга гантели\\nк поясу', ['null'])
+    s = append_cells(s, 'Отжимания\\nна брусьях', ['{bw:true,r:[22,20]}'])
+    s = append_cells(s, 'Махи гантелями\\nв стороны', ['{w:"12.5кг",r:[12,12,12]}'])
     s = append_cells(s, 'Подъём гантелей\\nна бицепс', ['null'])
     s = append_cells(s, 'Подъём ног\\nв висе', ['null'])
-    s = append_cells(s, 'Молитва', ['null'])
-    s = append_cells(s, 'Жим гантелей\\nгоризонтальный', ['null'])
-    s = append_cells(s, 'Обратная\\nбабочка', ['{w:"54кг",r:[12,11,11]}'])
+    s = append_cells(s, 'Молитва', ['{w:"82кг",r:[20,16,15]}'])
+    s = append_cells(s, 'Жим гантелей\\nгоризонтальный', ['{w:"32.5кг",r:[10,10,8]}'])
+    s = append_cells(s, 'Обратная\\nбабочка', ['null'])
     s = append_cells(s, 'Выпады вперёд\\nс гантелями', ['null'])
     s = append_cells(s, 'Подъём на носок\\n1 ногой', ['null'])
-    s = append_cells(s, 'Разгибание рук\\nс канатом', ['{w:"54.5кг",r:[12,12,12]}'])
-    s = append_cells(s, 'Молотковые\\nсгибания', ['null'])
-
-    if 'name: "Скручивания\\nна наклонной"' not in s:
-        marker = '];const COMMENTS = {'
-        pos = s.find(marker)
-        if pos < 0:
-            raise RuntimeError('EXERCISES end marker not found')
-        cells = ','.join(['null'] * 58 + ['{w:"5кг",r:[15,15,15]}'])
-        obj = ',{name: "Скручивания\\nна наклонной",cells: [' + cells + ']}'
-        s = s[:pos] + obj + s[pos:]
+    s = append_cells(s, 'Разгибание рук\\nс канатом', ['null'])
+    s = append_cells(s, 'Молотковые\\nсгибания', ['{w:"15кг",r:[12,10,10]}'])
+    s = append_cells(s, 'Скручивания\\nна наклонной', ['null'])
 
 comments = {
     52: "ℹ️ 14.08.2026 — Подъём на носок не выполнялся: икры болят после вчерашнего забега и вело. Подъём ног в висе не выполнялся: корпус напряжён после вчерашнего забега и вело.",
