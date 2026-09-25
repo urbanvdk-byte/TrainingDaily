@@ -90,4 +90,16 @@ if '65: ' not in body:
 # Keep all existing tabs and the local running journal intact.
 if 'src="run.html"' not in s or '"25.09"' not in s or '65: ' not in s:
     raise RuntimeError("Post-update validation failed")
+
+# Correct the pre-existing trailing placeholder that shifted the 21.09 row
+# one column into the 25.09 date. Do not change any other exercise history.
+bad = '{w:"22.5кг",r:[10,9,9]},null,{w:"20кг",r:[12,12,11]},null]'
+good = '{w:"22.5кг",r:[10,9,9]},{w:"20кг",r:[12,12,11]},null]'
+if bad in s:
+    if s.count(bad) != 1:
+        raise RuntimeError("Ambiguous row alignment; refusing to edit")
+    s = s.replace(bad, good, 1)
+elif good not in s:
+    raise RuntimeError("One-arm row structure changed; inspect manually")
+
 p.write_text(s, encoding="utf-8")
