@@ -31,75 +31,60 @@ def append_cell(text, name, entry):
                 return text[:i] + ',' + entry + text[i:]
     raise RuntimeError(f"Exercise array end not found: {name}")
 
-# Strength A — 25.09.2026. Idempotent on repeated workflow runs.
-if '"25.09"' not in s:
-    old_stat = '<span class="stat-val">65</span><span class="stat-lbl">Тренировок</span>'
-    old_dates = '"11.09","14.09","21.09"]'
+# Strength B — 29.09.2026. Idempotent.
+if '"29.09"' not in s:
+    old_stat = '<span class="stat-val">66</span><span class="stat-lbl">Тренировок</span>'
+    old_dates = '"14.09","21.09","25.09"]'
     if old_stat not in s or old_dates not in s:
         raise RuntimeError("Unexpected diary version; refusing to alter index.html")
 
-    s = s.replace(old_stat, '<span class="stat-val">66</span><span class="stat-lbl">Тренировок</span>', 1)
-    s = s.replace(old_dates, '"11.09","14.09","21.09","25.09"]', 1)
+    s = s.replace(old_stat, '<span class="stat-val">67</span><span class="stat-lbl">Тренировок</span>', 1)
+    s = s.replace(old_dates, '"14.09","21.09","25.09","29.09"]', 1)
 
     idx = re.search(r'const NEW_IDX = new Set\(\[([0-9, ]+)\]\);', s)
-    if not idx or not idx.group(1).rstrip().endswith('64'):
+    if not idx or not idx.group(1).rstrip().endswith('65'):
         raise RuntimeError("Unexpected NEW_IDX")
-    s = s[:idx.start(1)] + idx.group(1) + ', 65' + s[idx.end(1):]
+    s = s[:idx.start(1)] + idx.group(1) + ', 66' + s[idx.end(1):]
 
     updates = [
-        (r'Жим гантелей\n(30°)', '{w:"30кг",r:[12,10,9]}'),
-        (r'Жим гантелей\nсидя (Плечи)', 'null'),
-        (r'Тяга верхнего\nблока', '{w:"68.2кг",r:[11,8,7]}'),
-        (r'Тяга нижнего\nблока (к поясу)', 'null'),
-        (r'Тяга гантели\nк поясу', 'null'),
-        (r'Отжимания\nна брусьях', '{bw:true,r:[21,19]}'),
-        (r'Махи гантелями\nв стороны', '{w:"10кг",r:[12,12,11]}'),
+        (r'Жим гантелей\n(30°)', 'null'),
+        (r'Жим гантелей\nсидя (Плечи)', '{w:"20кг",r:[12,12,12]}'),
+        (r'Тяга верхнего\nблока', 'null'),
+        (r'Тяга нижнего\nблока (к поясу)', '{w:"72.7кг",r:[12,11,8]}'),
+        (r'Тяга гантели\nк поясу', '{w:"20кг",r:[12,12,12]}'),
+        (r'Отжимания\nна брусьях', 'null'),
+        (r'Махи гантелями\nв стороны', 'null'),
         (r'Подъём гантелей\nна бицепс', 'null'),
         (r'Подъём ног\nв висе', 'null'),
-        ('Молитва', '{w:"82кг",r:[20,14,11]}'),
-        (r'Жим гантелей\nгоризонтальный', '{w:"32.5→30кг",r:[10,6,9]}'),
-        (r'Обратная\nбабочка', 'null'),
-        (r'Выпады вперёд\nс гантелями', 'null'),
-        (r'Подъём на носок\n1 ногой', 'null'),
-        (r'Разгибание рук\nс канатом', 'null'),
+        ('Молитва', 'null'),
+        (r'Жим гантелей\nгоризонтальный', 'null'),
+        (r'Обратная\nбабочка', '{w:"54кг",r:[12,12,11]}'),
+        (r'Выпады вперёд\nс гантелями', '{w:"18кг",r:[12,12]}'),
+        (r'Подъём на носок\n1 ногой', '{w:"32.5кг",r:[15,13,11]}'),
+        (r'Разгибание рук\nс канатом', '{w:"59.1кг",r:[12,11,9]}'),
         (r'Молотковые\nсгибания', 'null'),
-        (r'Скручивания\nна наклонной', 'null'),
-        (r'Тяга прямыми\nруками', '{w:"45.5→50→50кг",r:[12,12,12]}')
+        (r'Скручивания\nна наклонной', '{w:"10кг",r:[16,14]}'),
+        (r'Тяга прямыми\nруками', 'null')
     ]
     for name, entry in updates:
         s = append_cell(s, name, entry)
 
-note = ("⚠️ 25.09.2026 — Силовая А. Жимы шли тяжело: наклонный жим 30 кг "
-        "12/10/9 сильно вымотал; на горизонтальном после 32.5 кг 10/6 "
-        "пришлось снизить третий подход до 30 кг ×9. Верхний блок "
-        "68.2 кг 11/8/7 — выраженное падение повторений. "
-        "Махи: левый локоть всё ещё тянет, хотя слабее, чем ранее; "
-        "несмотря на это, выполнены с уменьшенным весом 10 кг 12/12/11. "
-        "Брусья: свой вес 21/19. Тяга прямыми руками: "
-        "45.5 кг ×12, затем 50 кг ×12/12. Молитва 82 кг 20/14/11.")
+note = ("⚠️ 29.09.2026 — Силовая Б. Тяга гантели к поясу выполнена с уменьшенным "
+        "до 20 кг весом из-за левого локтя; 12/12/12. Жим сидя 20 кг 12/12/12. "
+        "Нижний блок 72.7 кг 12/11/8. Обратная бабочка 54 кг 12/12/11. "
+        "Выпады 18 кг 12/12 на каждую ногу. Подъём на носок 32.5 кг 15/13/11. "
+        "Канат 59.1 кг 12/11/9. Скручивания 10 кг 16/14.")
 start = s.find('const COMMENTS = {')
 end = s.find('};function findPRs', start)
 if start < 0 or end < 0:
     raise RuntimeError("COMMENTS not found")
 body = s[start+len('const COMMENTS = {'):end]
-if '65: ' not in body:
+if '66: ' not in body:
     note_escaped = note.replace("\\", "\\\\").replace('"', '\\"')
-    body = body.rstrip() + (',' if body.strip() else '') + f'65: "{note_escaped}"'
+    body = body.rstrip() + (',' if body.strip() else '') + f'66: "{note_escaped}"'
     s = s[:start+len('const COMMENTS = {')] + body + s[end:]
 
-# Keep all existing tabs and the local running journal intact.
-if 'src="run.html"' not in s or '"25.09"' not in s or '65: ' not in s:
+if 'src="run.html"' not in s or '"29.09"' not in s or '66: ' not in s:
     raise RuntimeError("Post-update validation failed")
-
-# Correct the pre-existing trailing placeholder that shifted the 21.09 row
-# one column into the 25.09 date. Do not change any other exercise history.
-bad = '{w:"22.5кг",r:[10,9,9]},null,{w:"20кг",r:[12,12,11]},null]'
-good = '{w:"22.5кг",r:[10,9,9]},{w:"20кг",r:[12,12,11]},null]'
-if bad in s:
-    if s.count(bad) != 1:
-        raise RuntimeError("Ambiguous row alignment; refusing to edit")
-    s = s.replace(bad, good, 1)
-elif good not in s:
-    raise RuntimeError("One-arm row structure changed; inspect manually")
 
 p.write_text(s, encoding="utf-8")
