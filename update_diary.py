@@ -75,6 +75,8 @@ if '"05.10"' not in s:
         s = append_cell(s, name, entry)
 
 note = ("ℹ️ 05.10.2026 — Силовая Б на следующий день после беговой тренировки 04.10. "
+        "По самочувствию выраженной усталости, как на предыдущих тяжёлых тренировках, не было: работа шла хорошо, "
+        "но привычной высокой энергичности, которая бывала раньше, пока не было. "
         "Жим сидя: 20 кг ×12, затем 22.5 кг ×12/12 — повышение рабочего веса при сохранении верхней границы повторений. "
         "Нижний блок 72.7 кг 11/10/10. Тяга гантели к поясу 20 кг 12/12/12. "
         "Обратная бабочка 54 кг 12/12/12. Выпады повышены до 20 кг и выполнены 12/12 на каждую ногу. "
@@ -84,11 +86,15 @@ start = s.find('const COMMENTS = {')
 end = s.find('};function findPRs', start)
 if start < 0 or end < 0:
     raise RuntimeError("COMMENTS not found")
-body = s[start + len('const COMMENTS = {'):end]
-if '68: ' not in body:
-    note_escaped = note.replace("\\", "\\\\").replace('"', '\\"')
-    body = body.rstrip() + (',' if body.strip() else '') + f'68: "{note_escaped}"'
-    s = s[:start + len('const COMMENTS = {')] + body + s[end:]
+body_start = start + len('const COMMENTS = {')
+body = s[body_start:end]
+note_escaped = note.replace("\\", "\\\\").replace('"', '\\"')
+new_entry = f'68: "{note_escaped}"'
+if re.search(r'68:\s*"(?:\\.|[^"\\])*"', body):
+    body = re.sub(r'68:\s*"(?:\\.|[^"\\])*"', new_entry, body, count=1)
+else:
+    body = body.rstrip() + (',' if body.strip() else '') + new_entry
+s = s[:body_start] + body + s[end:]
 
 if 'src="run.html"' not in s or '"05.10"' not in s or '68: ' not in s:
     raise RuntimeError("Post-update validation failed")
