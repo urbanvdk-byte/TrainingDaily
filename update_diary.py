@@ -1,100 +1,71 @@
 from pathlib import Path
-import re
 
-p = Path("index.html")
+p = Path("run.html")
 s = p.read_text(encoding="utf-8")
 
+marker = 'data-run-entry="2026-10-08"'
+if marker not in s:
+    row_0410 = '<tr class="type-aerobic" data-run-entry="2026-10-04"><td>04.10.2026</td><td>Аэробная работа с прогрессией финиша</td><td>6.23</td><td>37:33</td><td>6:02</td><td>146/161</td><td>162</td><td>4</td><td>—</td><td>2.7/1.8</td></tr>'
+    row_0810 = '<tr class="type-aerobic" data-run-entry="2026-10-08"><td>08.10.2026</td><td>Аэробная работа (рельеф)</td><td>6.92</td><td>41:42</td><td>6:01</td><td>154/171</td><td>158</td><td>97</td><td>—</td><td>3.1/2.2</td></tr>'
+    if row_0410 not in s:
+        raise RuntimeError("04.10 run row not found")
+    s = s.replace(row_0410, row_0410 + row_0810, 1)
 
-def append_cell(text, name, entry):
-    marker = f'name: "{name}",cells: ['
-    pos = text.find(marker)
-    if pos < 0:
-        raise RuntimeError(f"Exercise not found: {name}")
-    arr_start = pos + len(marker) - 1
-    depth = 0
-    quoted = False
-    escaped = False
-    for i in range(arr_start, len(text)):
-        ch = text[i]
-        if quoted:
-            if escaped:
-                escaped = False
-            elif ch == "\\":
-                escaped = True
-            elif ch == '"':
-                quoted = False
-            continue
-        if ch == '"':
-            quoted = True
-        elif ch == '[':
-            depth += 1
-        elif ch == ']':
-            depth -= 1
-            if depth == 0:
-                return text[:i] + ',' + entry + text[i:]
-    raise RuntimeError(f"Exercise array end not found: {name}")
+    note = ('<div class="note-card"><div class="note-header" style="background:#cce5ff">'
+            '<strong>08.10.2026 — Аэробная работа (рельеф)</strong>'
+            '<span class="meta">Маршрут: рельеф &nbsp;|&nbsp; COROS: Tempo &nbsp;|&nbsp; Борг: —</span></div>'
+            '<div class="note-body"><div class="text">'
+            '6,92 км за 41:42, средний темп 6:01/км при ЧСС 154, максимум 171. Набор 97 м — нагрузка заметно тяжелее, чем на почти плоской тренировке 04.10. '
+            'При этом средний темп практически не изменился (6:02 → 6:01), дистанция выросла на 0,69 км, а приведённый темп составил 5:56/км. '
+            'Цена этого прогресса — рост среднего пульса на 8 уд/мин и тренировочной нагрузки с 96 до 138; ТЭ вырос с 2,7/1,8 до 3,1/2,2. '
+            'По километрам рельеф сильно влиял на темп: 6:09, 5:42, 6:14, 5:46, 6:53, 5:45 и последние 0,92 км примерно по 5:40. '
+            'Самый тяжёлый 5-й км включал около 37 м набора: 6:53 при ЧСС 161, поэтому замедление объясняется подъёмом, а не развалом формы. '
+            'На 6-м км после спуска темп вернулся к 5:45 при ЧСС 153, а финиш прошёл около 5:40 при ЧСС 159 — хороший признак сохранения работоспособности после подъёма. '
+            'Средняя мощность 238 Вт, каденс 158, длина шага 1,05 м, средний контакт с землёй по километровым отрезкам около 282 мс. '
+            'На фоне силовой А 07.10 эта пробежка даёт хороший аэробно-силовой стимул, но уже не является лёгкой. Следующий бег — 5–7 км ровно и разговорно, без рельефной гонки и быстрого финиша.'
+            '</div><div class="stats">'
+            'Дист: <span>6.92 км</span> &nbsp;|&nbsp; Время: <span>41:42</span> &nbsp;|&nbsp; Темп: <span>6:01</span><br>'
+            'Пульс: <span>154/171</span> &nbsp;|&nbsp; Каденс: <span>158 ср. / 177 макс.</span> &nbsp;|&nbsp; Набор: <span>97 м</span><br>'
+            'ТЭ: <span>3.1 / 2.2</span> &nbsp;|&nbsp; Лучший км: <span>5:22</span> &nbsp;|&nbsp; Калории: <span>611</span><br>'
+            'ТН: <span>138</span> &nbsp;|&nbsp; Мощность: <span>238 Вт</span> &nbsp;|&nbsp; Длина шага: <span>1,05 м</span> &nbsp;|&nbsp; Приведённый темп: <span>5:56</span> &nbsp;|&nbsp; Контакт: <span>~282 мс</span>'
+            '</div></div></div>')
+    progress_marker = '</div><div class="section-title">Прогресс ключевых показателей</div>'
+    if progress_marker not in s:
+        raise RuntimeError("Progress section marker not found")
+    s = s.replace(progress_marker, note + progress_marker, 1)
 
+    header_old = '<th>04.10</th><th>Динамика</th>'
+    if header_old not in s:
+        raise RuntimeError("Progress header marker not found")
+    s = s.replace(header_old, '<th>04.10</th><th>08.10</th><th>Динамика</th>', 1)
 
-# Strength A — 07.10.2026. Idempotent.
-if '"07.10"' not in s:
-    old_stat = '<span class="stat-val">69</span><span class="stat-lbl">Тренировок</span>'
-    old_dates = '"29.09","01.10","05.10"]'
-    if old_stat not in s or old_dates not in s:
-        raise RuntimeError("Unexpected diary version; refusing to alter index.html")
+    def add_progress(text, label, value, indicator):
+        row_marker = '<td class="left">' + label + '</td>'
+        start = text.find(row_marker)
+        if start < 0:
+            raise RuntimeError(f"Progress row not found: {label}")
+        end = text.find('</tr>', start)
+        if end < 0:
+            raise RuntimeError(f"Progress row end not found: {label}")
+        ind = text.rfind('<td class="indicator">', start, end)
+        if ind < 0:
+            raise RuntimeError(f"Progress indicator not found: {label}")
+        text = text[:ind] + '<td>' + value + '</td>' + text[ind:]
+        ind = text.find('<td class="indicator">', ind + len(value))
+        ind_end = text.find('</td>', ind)
+        text = text[:ind] + '<td class="indicator">' + indicator + text[ind_end:]
+        return text
 
-    s = s.replace(old_stat, '<span class="stat-val">70</span><span class="stat-lbl">Тренировок</span>', 1)
-    s = s.replace(old_dates, '"29.09","01.10","05.10","07.10"]', 1)
+    s = add_progress(s, 'Каденс (ш/мин)', '158', 'На рельефе каденс снизился 162 → 158; это объяснимо подъёмами и не требует искусственного повышения')
+    s = add_progress(s, 'Пульс средний', '154', 'Темп 6:01/км при ЧСС 154 и наборе 97 м: нагрузка выше 04.10, но рельеф объясняет значительную часть роста пульса')
+    s = add_progress(s, 'Дистанция (км)', '6.92', 'Объём вырос с 6,23 до 6,92 км (+11%); дальше не повышать одновременно дистанцию и интенсивность')
+    s = add_progress(s, 'Аэробный ТЭ', '3.1', 'ТЭ 3.1 / 2.2 — полноценная развивающая аэробная работа, не восстановительная')
+    s = add_progress(s, 'Темп средний (мин/км)', '6:01', 'Практически тот же темп, что 04.10, но на маршруте с 97 м набора; приведённый темп 5:56')
+    s = add_progress(s, 'Лучший темп (мин/км)', '5:22', 'Лучший км 5:22; скорость вернулась после подъёмов, но следующий бег должен быть лёгким')
+    s = add_progress(s, 'Время на земле (мс)', '~282', 'Контакт около 282 мс закономерен для рельефа и более низкого каденса; явного развала к финишу нет')
+    s = add_progress(s, 'Набор высоты (м)', '97', '97 м набора на 6,92 км — существенный рельеф; темп нужно оценивать вместе с пульсом и приведённым темпом')
 
-    idx = re.search(r'const NEW_IDX = new Set\(\[([0-9, ]+)\]\);', s)
-    if not idx or not idx.group(1).rstrip().endswith('68'):
-        raise RuntimeError("Unexpected NEW_IDX")
-    s = s[:idx.start(1)] + idx.group(1) + ', 69' + s[idx.end(1):]
-
-    updates = [
-        (r'Жим гантелей\n(30°)', '{w:"30кг",r:[12,11,8]}'),
-        (r'Жим гантелей\nсидя (Плечи)', 'null'),
-        (r'Тяга верхнего\nблока', '{w:"68.2кг",r:[11,8,7]}'),
-        (r'Тяга нижнего\nблока (к поясу)', 'null'),
-        (r'Тяга гантели\nк поясу', 'null'),
-        (r'Отжимания\nна брусьях', '{bw:true,r:[26,20]}'),
-        (r'Махи гантелями\nв стороны', 'null'),
-        (r'Подъём гантелей\nна бицепс', 'null'),
-        (r'Подъём ног\nв висе', 'null'),
-        ('Молитва', '{w:"82→86.5→86.5кг",r:[15,11,11]}'),
-        (r'Жим гантелей\nгоризонтальный', '{w:"30кг",r:[9,9,8]}'),
-        (r'Обратная\nбабочка', 'null'),
-        (r'Выпады вперёд\nс гантелями', 'null'),
-        (r'Подъём на носок\n1 ногой', 'null'),
-        (r'Разгибание рук\nс канатом', 'null'),
-        (r'Молотковые\nсгибания', 'null'),
-        (r'Скручивания\nна наклонной', 'null'),
-        (r'Тяга прямыми\nруками', '{w:"54.5→59.1→59.1кг",r:[12,12,10]}'),
-        (r'Разведение рук\nв стороны (тренажёр)', '{w:"9.1кг",r:[12,12,11]}')
-    ]
-    for name, entry in updates:
-        s = append_cell(s, name, entry)
-
-note = ("ℹ️ 07.10.2026 — Силовая А. Наклонный жим 30 кг 12/11/8; горизонтальный жим 30 кг 9/9/8. "
-        "Верхний блок 68.2 кг 11/8/7 — заметный спад к третьему подходу. "
-        "Разведение рук в тренажёре 9.1 кг 12/12/11 — почти закрыта верхняя граница диапазона без возврата к провоцирующим локоть махам гантелями. "
-        "Брусья 26/20 — лучший первый подход текущего периода. "
-        "Тяга прямыми руками: 54.5 кг ×12, затем 59.1 кг ×12/10 — повышение веса. "
-        "Молитва: 82 кг ×15, затем 86.5 кг ×11/11 — повышение веса при хорошем сохранении повторений.")
-start = s.find('const COMMENTS = {')
-end = s.find('};function findPRs', start)
-if start < 0 or end < 0:
-    raise RuntimeError("COMMENTS not found")
-body_start = start + len('const COMMENTS = {')
-body = s[body_start:end]
-note_escaped = note.replace("\\", "\\\\").replace('"', '\\"')
-new_entry = f'69: "{note_escaped}"'
-if re.search(r'69:\s*"(?:\\.|[^"\\])*"', body):
-    body = re.sub(r'69:\s*"(?:\\.|[^"\\])*"', new_entry, body, count=1)
-else:
-    body = body.rstrip() + (',' if body.strip() else '') + new_entry
-s = s[:body_start] + body + s[end:]
-
-if 'src="run.html"' not in s or '"07.10"' not in s or '69: ' not in s:
-    raise RuntimeError("Post-update validation failed")
+if marker not in s:
+    raise RuntimeError("Run entry validation failed")
 
 p.write_text(s, encoding="utf-8")
